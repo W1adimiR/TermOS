@@ -24,6 +24,8 @@ extern void load_idt(unsigned long *idt_ptr);
 unsigned int current_loc = 0;
 /* video memory begins at address 0xb8000 */
 char *vidptr = (char*)0xb8000;
+char input[255];
+unsigned short input_pos = 0;
 
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
@@ -134,7 +136,12 @@ void keyboard_handler_main(void)
 		if(keycode < 0)
 			return;
 
+		input[input_pos++] = keyboard_map[(unsigned char) keycode];
 		if(keycode == ENTER_KEY_CODE) {
+			kprint_newline();
+			input[--input_pos] = '\0';
+			input_pos = 0;
+			kprint(input);
 			kprint_newline();
 			return;
 		}
@@ -146,14 +153,15 @@ void keyboard_handler_main(void)
 
 void kmain(void)
 {
-	const char *str = "my first kernel with keyboard support";
+	const char *invitation = "TermOS:> ";
 	clear_screen();
-	kprint(str);
-	kprint_newline();
-	kprint_newline();
-
 	idt_init();
 	kb_init();
 
-	while(1);
+	kprint(invitation);
+	while(1){
+
+	}
+
+  return;
 }
