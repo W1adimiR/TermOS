@@ -20,12 +20,15 @@ extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
 
+extern void shell_run(void);
+extern void print_shell_promt(void);
+
 /* current cursor location */
 unsigned int current_loc = 0;
 /* video memory begins at address 0xb8000 */
 char *vidptr = (char*)0xb8000;
-char input[255];
-unsigned short input_pos = 0;
+char keyboard_input[255];
+char input_pos = 0;
 
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
@@ -123,8 +126,8 @@ void clear_screen(void)
 
 void keyboard_handler_main(void)
 {
-	unsigned char status;
 	char keycode;
+	unsigned char status;
 
 	/* write EOI */
 	write_port(0x20, 0x20);
@@ -136,32 +139,27 @@ void keyboard_handler_main(void)
 		if(keycode < 0)
 			return;
 
-		input[input_pos++] = keyboard_map[(unsigned char) keycode];
+    keyboard_input[input_pos++] = keyboard_map[(unsigned char) keycode];
 		if(keycode == ENTER_KEY_CODE) {
-			kprint_newline();
-			input[--input_pos] = '\0';
+			keyboard_input[--input_pos] = '\0';
 			input_pos = 0;
-			kprint(input);
-			kprint_newline();
 			return;
 		}
 
 		vidptr[current_loc++] = keyboard_map[(unsigned char) keycode];
 		vidptr[current_loc++] = 0x07;
 	}
+	return;
 }
+
 
 void kmain(void)
 {
-	const char *invitation = "TermOS:> ";
 	clear_screen();
 	idt_init();
 	kb_init();
 
-	kprint(invitation);
-	while(1){
-
-	}
+  shell_run();
 
   return;
 }
